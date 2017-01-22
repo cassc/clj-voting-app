@@ -40,6 +40,7 @@
 (defonce curr-poll (atom nil))
 (defonce vote-state (atom {}))
 (defonce active-page (atom nil))
+(defonce anonymous-votes (atom #{}))
 
 ;; watch page change by monitoring session state, and set active-page accordingly
 (add-watch
@@ -151,16 +152,15 @@
       :error-handler default-error-handler})))
 
 (defn option-list [opts]
-  (into
-   [:select.form-control
-    {:value (:vid @vote-state)
-     :on-change #(let [idx (-> % .-target .-selectedIndex)
-                       vid (-> (aget (.-target %) idx) .-value)]
-                   (swap! vote-state assoc :vid vid))}]
-   (concat
-    [[:option {:value 0} "Select an options ..."]]
-    (map (fn [{:keys [title id]}] [:option {:value id} title]) opts)
-    [[:option {:value -1} "I'd like to add my own option "]])))
+  [:select.form-control
+   {:value (:vid @vote-state)
+    :on-change #(let [idx (-> % .-target .-selectedIndex)
+                      vid (-> (aget (.-target %) idx) .-value)]
+                  (swap! vote-state assoc :vid vid))}
+   [:option {:value 0} "Select an options ..."]
+   (doall
+    (map (fn [{:keys [title id]}] [:option {:value id} title]) opts))
+   [:option {:value -1} "I'd like to add my own option "]])
 
 (defn vote! []
   (let [vid (:vid @vote-state)

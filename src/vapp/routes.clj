@@ -142,7 +142,7 @@
     (response
      (if (->vote {:user_id user_id :poll_id poll_id})
        {:code "err" :err "You can only vote once in a poll!"}
-       (let [opt_title (s/trim opt_title)
+       (let [opt_title (when opt_title (s/trim opt_title))
              opt_id (or opt_id (option-title->id poll_id opt_title) (add-options poll_id [opt_title]))
              vote {:user_id user_id :poll_id poll_id :opt_id opt_id}]
          (t/info "voting for" vote)

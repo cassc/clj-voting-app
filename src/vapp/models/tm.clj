@@ -82,6 +82,8 @@
   (->entity (sdb) :vote params))
 
 (defn option-title->id [poll_id option]
-  (some #(when (= option (:title %))
-           (:id %))
-        (->entities (sdb) :options {:poll_id poll_id})))
+  {:pre [poll_id]}
+  (when option
+    (some #(when (= option (:title %))
+             (:id %))
+          (->entities (sdb) :options {:poll_id poll_id}))))
