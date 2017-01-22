@@ -1,0 +1,54 @@
+div#content-holder{
+    margin-top: 80px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+div.new-poll{
+    margin-top: 20px;
+}
+
+input.new-poll{
+    margin: 5px 0;
+}
+
+input.poll-title{
+    font-size: 18px;
+    font-weight:bold;
+}
+
+span.option-in-edit{
+    display:inline-block;
+    margin-right: 40px;
+}
+
+text-area.create-poll{
+    height: 120px !important;
+}
+
+input.create-poll{
+    margin-top: 20px; 
+}
+
+ul.list-of-polls>li{
+    cursor:hand;
+}
+
+/* vote page */
+input.vote-btn{
+    margin: 20px 0 10px 0;
+}
+
+a.tweet-btn{
+    margin: 0 0 10px 0;
+}
+
+div.custom-option{
+    margin-top: 10px;
+    text-align:right;
+    font-weight:bold;
+}
+
+.poll-title{
+    font-family:fantasy;
+}

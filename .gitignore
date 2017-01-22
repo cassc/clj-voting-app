@@ -1,0 +1,16 @@
+vapp.data
+resources/public/cljs/
+/target
+/classes
+/checkouts
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/.lein-*
+/.nrepl-port
+.hgignore
+.hg/
+*.log
+tm.data
+resources/xls/

@@ -1,0 +1,12 @@
+{:log-level :info
+ :log-file "vapp.log"
+ :server-options {:port 5588
+                  :ip "0.0.0.0"}
+ :sqlite {:db "vapp.data"
+          :connection-init-sql "PRAGMA foreign_keys = ON"}
+ :twitter {:callback-url
+           "http://www.cern.cc:5588/"
+           ;;"http://localhost:5588"
+           }
+ ;; :twitter-faked {:oauth_token "246090616-C4W0AAszMnNC2nBvMiSfBEd1PMzgHHhaEird7uZF", :oauth_token_secret "96d6wuMaU1M21BQAMQe51DzVItdrcbXpyGs3AAfMooZl3", :user_id "246090616", :screen_name "chencassc", :x_auth_expires "0"}
+}
