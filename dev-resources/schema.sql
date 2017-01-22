@@ -34,12 +34,13 @@ unique (poll_id, title)
 create table vote(
 `id` integer primary key,
 poll_id integer not null,
-user_id integer not null,
+user_id integer null,
+ip text null,
 opt_id integer not null,
 foreign key (user_id) references tuser(user_id),
 foreign key (poll_id) references poll(id),
-foreign key (opt_id) references options(id),
-unique (poll_id, user_id)
+foreign key (opt_id) references options(id)
 );
+
 
 

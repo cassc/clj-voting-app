@@ -107,13 +107,37 @@
   (response
    {:code "ok" :data (poll-list)}))
 
+(defn put-vote
+  "make a vote. 
+  Note if opt_id exists, the user is voting an existing option. 
+  if opt_title exists, the user is voting with a custom option"
+  [{:keys [params session] :as req}]
+  (let [{:keys [opt_id poll_id opt_title]} params
+        {:keys [user_id]} (:user session)
+        ip (or (get-in req [:headers "x-real-ip"]) (:remote-addr req))]
+    (assert (and (or opt_id opt_title) 
+                 (not (and opt_id opt_title)))
+            "Only one of opt_id and opt_title can be provided in params")
+    (assert (or (not opt_title) user_id)
+            "Only logged in user can add custom option")
+    (response
+     (if (and user_id (->vote {:user_id user_id :poll_id poll_id}))
+       {:code "err" :err "You can only vote once in a poll!"}
+       (let [opt_title (when opt_title (s/trim opt_title))
+             opt_id (or opt_id (option-title->id poll_id opt_title) (add-options poll_id [opt_title]))
+             vote {:user_id user_id :poll_id poll_id :opt_id opt_id :ip ip}]
+         (t/info "voting for" vote)
+         (add-vote vote)
+         {:code "ok"})))))
+
 (defroutes public-routes
   (GET "/" req (home-page req))
   (GET "/oauth/init" req (handle-oauth-init req))
   (GET "/me" req (get-me req))
   (GET "/poll" [poll_id] (get-poll poll_id))
   (GET "/poll/list" req (get-poll-list req))
-  (GET "/logout" req (logout req)))
+  (GET "/logout" req (logout req))
+  (PUT "/vote" req (put-vote req)))
 
 (defn put-poll [{:keys [params session]}]
   (let [{:keys [title opts]} params
@@ -129,33 +153,12 @@
     (erase-poll {:user_id user_id :poll_id poll_id})
     (response {:code "ok"})))
 
-(defn put-vote
-  "make a vote. 
-  Note if opt_id exists, the user is voting an existing option. 
-  if opt_title exists, the user is voting with a custom option"
-  [{:keys [params session]}]
-  (let [{:keys [opt_id poll_id opt_title]} params
-        {:keys [user_id]} (:user session)]
-    (assert (and (or opt_id opt_title)
-                 (not (and opt_id opt_title)))
-            "Only one of opt_id and opt_title can be provided in params")
-    (response
-     (if (->vote {:user_id user_id :poll_id poll_id})
-       {:code "err" :err "You can only vote once in a poll!"}
-       (let [opt_title (when opt_title (s/trim opt_title))
-             opt_id (or opt_id (option-title->id poll_id opt_title) (add-options poll_id [opt_title]))
-             vote {:user_id user_id :poll_id poll_id :opt_id opt_id}]
-         (t/info "voting for" vote)
-         (add-vote vote)
-         {:code "ok"})))))
-
 (defn get-my-polls [req]
   (response
    {:code "ok" :data (my-polls {:creator_id (get-in req [:session :user :user_id])})}))
 (defroutes user-routes
   (GET "/user/poll" req (get-my-polls req))
-  (PUT "/user/poll" req (put-poll req))
-  (PUT "/user/vote" req (put-vote req))
+  (PUT "/user/poll" req (put-poll req)) 
   (DELETE "/user/poll" req (delete-poll req)))
 
 

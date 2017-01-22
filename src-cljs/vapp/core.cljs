@@ -40,7 +40,13 @@
 (defonce curr-poll (atom nil))
 (defonce vote-state (atom {}))
 (defonce active-page (atom nil))
-(defonce anonymous-votes (atom #{}))
+(defonce anonymous-votes (local-storage (atom #{}) :anonymous-votes))
+
+(defn add-anonymous-vote [poll_id]
+  (swap! anonymous-votes conj poll_id))
+
+(defn anonymously-voted? [poll_id]
+  (@anonymous-votes (str->num poll_id)))
 
 ;; watch page change by monitoring session state, and set active-page accordingly
 (add-watch
@@ -159,8 +165,9 @@
                   (swap! vote-state assoc :vid vid))}
    [:option {:value 0} "Select an options ..."]
    (doall
-    (map (fn [{:keys [title id]}] [:option {:value id} title]) opts))
-   [:option {:value -1} "I'd like to add my own option "]])
+    (map (fn [{:keys [title id]}] ^{:key id} [:option {:value id} title]) opts))
+   (when @me
+     [:option {:value -1} "I'd like to add my own option "])])
 
 (defn vote! []
   (let [vid (:vid @vote-state)
@@ -168,10 +175,17 @@
                  (:vtitle @vote-state))
         pid (:id @curr-poll)]
     (println "voting" pid vtitle vid )
-    (if (and vid (or
-                  (pos? (str->num vid))
-                  (not (s/blank? vtitle))))
-      (PUT "/user/vote"
+    (cond
+      (not (and vid (or
+                     (pos? (str->num vid))
+                     (not (s/blank? vtitle)))))
+      (js/alert "Please select an option!")
+
+      (and (not @me) (anonymously-voted? pid))
+      (js/alert "You can only vote once in a poll!")
+      
+      :else
+      (PUT "/vote"
            {:params {:poll_id pid
                      :opt_id (when (pos? vid) vid)
                      :opt_title (when (neg? vid) vtitle)}
@@ -180,10 +194,13 @@
             :response-format :json
             :handler (fn [{:keys [code err data]}]
                        (case code
-                         "ok" (load-poll)
+                         "ok" (do
+                                (load-poll)
+                                (when (not @me)
+                                  (add-anonymous-vote pid)))
                          "err" (js/alert err)))
             :error-handler default-error-handler})
-      (js/alert "Please select an option!"))))
+      )))
 
 (defn delete-curr-poll! []
   (let [poll @curr-poll]
